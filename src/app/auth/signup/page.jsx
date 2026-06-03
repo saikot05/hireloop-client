@@ -1,139 +1,180 @@
 "use client";
 
-import React, { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Input, Button, Card, Alert } from "@heroui/react"; 
+import { useState } from "react";
+import { Card, Button, Link, TextField, Label, InputGroup, Input, FieldError } from "@heroui/react";
+import { Description, Radio, RadioGroup } from "@heroui/react";
 
-import { Eye, EyeSlash, Envelope, Lock, Person } from "@gravity-ui/icons";
+import { Eye, EyeSlash, Person, At, ShieldKeyhole } from "@gravity-ui/icons";
 import { signUp } from "@/lib/auth-client";
 
 export default function SignupPage() {
-  const router = useRouter();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  
-  const [isVisible, setIsVisible] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+    // Form fields
+    const [name, setName] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [role, setRole] = useState("seeker");
 
-  const toggleVisibility = () => setIsVisible(!isVisible);
+    // UI States
+    const [isVisible, setIsVisible] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
 
-  const handleSignup = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setErrorMessage("");
-    setSuccessMessage("");
+    const toggleVisibility = () => setIsVisible(!isVisible);
 
-    try {
-      const { data, error } = await signUp.email({
-        email,
-        password,
-        name,
-      });
+    const handleSignup = async (e) => {
+        e.preventDefault();
 
-      if (error) {
-        setErrorMessage(error.message || "Something went wrong. Please try again.");
-      } else {
-        setSuccessMessage("Account created successfully! Redirecting to sign in...");
-        setName("");
-        setEmail("");
-        setPassword("");
+        setError("");
+        setSuccess("");
+        setIsLoading(true);
 
-        callbackURL:"/"
-      }
-    } catch (err) {
-      setErrorMessage("An unexpected error occurred.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        try {
+            const { data, error: authError } = await signUp.email({
+                email,
+                password,
+                name,
+                role,
+                callbackURL: "/",
+            });
 
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md shadow-lg">
-        <Card.Content className="space-y-6 p-8">
-          
-          <div className="flex flex-col space-y-2 text-center">
-            <h1 className="text-2xl font-bold tracking-tight">Create an account</h1>
-            <p className="text-small text-default-500">
-              Enter your details below to create your account
-            </p>
-          </div>
+            if (authError) {
+                setError(authError.message || "Something went wrong during signup.");
+            } else {
+                setSuccess("Account created successfully! Welcome.");
+                setName("");
+                setEmail("");
+                setPassword("");
+            }
+        } catch (err) {
+            setError("An unexpected network error occurred.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-          {errorMessage && (
-            <Alert color="danger" title="Error" description={errorMessage} />
-          )}
-          {successMessage && (
-            <Alert color="success" title="Success" description={successMessage} />
-          )}
+    return (
+        <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-950 px-4">
+            <Card className="w-full max-w-md p-6 shadow-sm border border-zinc-200 dark:border-zinc-800">
 
-          <form onSubmit={handleSignup} className="space-y-5">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-small font-medium text-default-700">Full Name</label>
-              <Input
-                isRequired
-                type="text"
-                placeholder="John Doe"
-                variant="bordered"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                startContent={<Person className="text-default-400 pointer-events-none text-xl" />}
-              />
-            </div>
+                {/* Header Container */}
+                <div className="flex flex-col items-center justify-center gap-1 pb-6 border-b border-zinc-100 dark:border-zinc-800 mb-6 text-center">
+                    <h1 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">Create an account</h1>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400">Fill in the fields below to get started</p>
+                </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label className="text-small font-medium text-default-700">Email Address</label>
-              <Input
-                isRequired
-                type="email"
-                placeholder="you@example.com"
-                variant="bordered"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                startContent={<Envelope className="text-default-400 pointer-events-none text-xl" />}
-              />
-            </div>
+                {/* Form Body */}
+                <form onSubmit={handleSignup} className="flex flex-col gap-5">
 
-            <div className="flex flex-col gap-1.5">
-              <label className="text-small font-medium text-default-700">Password</label>
-              <Input
-                isRequired
-                placeholder="••••••••"
-                variant="bordered"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                startContent={<Lock className="text-default-400 pointer-events-none text-xl" />}
-                endContent={
-                  <button
-                    className="focus:outline-none flex items-center justify-center h-full"
-                    type="button"
-                    onClick={toggleVisibility}
-                  >
-                    {isVisible ? <EyeSlash className="text-default-400 text-xl" /> : <Eye className="text-default-400 text-xl" />}
-                  </button>
-                }
-                type={isVisible ? "text" : "password"}
-              />
-            </div>
+                    {/* Name Field */}
+                    <TextField isRequired name="name" className="flex flex-col gap-1.5">
+                        <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Name</Label>
+                        <InputGroup className="flex items-center gap-2 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 bg-zinc-50 dark:bg-zinc-900 focus-within:border-primary transition-colors">
+                            <Person className="text-zinc-400 pointer-events-none" size={16} />
+                            <Input
+                                type="text"
+                                placeholder="Enter your full name"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                className="w-full bg-transparent py-2 text-sm outline-none border-none text-zinc-900 dark:text-zinc-100"
+                            />
+                        </InputGroup>
+                    </TextField>
 
-            <Button isLoading={isLoading} type="submit" color="primary" className="w-full mt-2 font-medium">
-              Sign Up
-            </Button>
-          </form>
+                    {/* Email Field */}
+                    <TextField isRequired name="email" type="email" className="flex flex-col gap-1.5">
+                        <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Email Address</Label>
+                        <InputGroup className="flex items-center gap-2 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 bg-zinc-50 dark:bg-zinc-900 focus-within:border-primary transition-colors">
+                            <At className="text-zinc-400 pointer-events-none" size={16} />
+                            <Input
+                                placeholder="you@example.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="w-full bg-transparent py-2 text-sm outline-none border-none text-zinc-900 dark:text-zinc-100"
+                            />
+                        </InputGroup>
+                    </TextField>
 
-          <div className="text-center text-small pt-2 border-t border-divider">
-            <p className="text-default-500">
-              Already have an account?{" "}
-              <Link href="/auth/signin" className="text-primary hover:underline font-semibold transition-colors">
-                Sign In
-              </Link>
-            </p>
-          </div>
-        </Card.Content>
-      </Card>
-    </div>
-  );
+                    {/* Password Field */}
+                    <TextField isRequired name="password" className="flex flex-col gap-1.5">
+                        <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Password</Label>
+                        <InputGroup className="flex items-center gap-2 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 bg-zinc-50 dark:bg-zinc-900 focus-within:border-primary transition-colors">
+                            <ShieldKeyhole className="text-zinc-400 pointer-events-none" size={16} />
+                            <Input
+                                type={isVisible ? "text" : "password"}
+                                placeholder="Choose a password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="w-full bg-transparent py-2 text-sm outline-none border-none text-zinc-900 dark:text-zinc-100"
+                            />
+                            <button
+                                className="focus:outline-none text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition"
+                                type="button"
+                                onClick={toggleVisibility}
+                                aria-label="toggle password visibility"
+                            >
+                                {isVisible ? <EyeSlash size={18} /> : <Eye size={18} />}
+                            </button>
+                        </InputGroup>
+                    </TextField>
+
+                    {/* Role Selection */}
+                    <div className="flex flex-col gap-4">
+                        <Label>Subscription plan</Label>
+                        <RadioGroup defaultValue="seeker" name="role" onChange = {value => setRole(value)} orientation="horizontal">
+                            <Radio value="seeker">
+                                <Radio.Control>
+                                    <Radio.Indicator />
+                                </Radio.Control>
+                                <Radio.Content>
+                                    <Label>Job Seeker</Label>
+                                </Radio.Content>
+                            </Radio>
+                            <Radio value="recruiter">
+                                <Radio.Control>
+                                    <Radio.Indicator />
+                                </Radio.Control>
+                                <Radio.Content>
+                                    <Label>Recruiter</Label>
+                                </Radio.Content>
+                            </Radio>
+                        </RadioGroup>
+                    </div>
+
+                    {/* Dynamic Status Badges */}
+                    {error && (
+                        <div className="p-3.5 text-xs font-medium rounded-xl bg-red-100/60 dark:bg-red-950/50 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900">
+                            <span className="font-semibold">Error:</span> {error}
+                        </div>
+                    )}
+
+                    {success && (
+                        <div className="p-3.5 text-xs font-medium rounded-xl bg-emerald-100/60 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
+                            <span className="font-semibold">Success:</span> {success}
+                        </div>
+                    )}
+
+                    {/* Action Button */}
+                    <Button
+                        type="submit"
+                        color="primary"
+                        className="w-full font-semibold rounded-xl text-sm h-12"
+                        isLoading={isLoading}
+                        isDisabled={isLoading}
+                    >
+                        Sign Up
+                    </Button>
+
+                    {/* Navigation Option */}
+                    <div className="text-center pt-4 border-t border-zinc-100 dark:border-zinc-800 mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+                        Already have an account?{" "}
+                        <Link href="/auth/signin" className="font-medium cursor-pointer text-sm text-blue-600 dark:text-blue-400">
+                            Sign in instead
+                        </Link>
+                    </div>
+
+                </form>
+            </Card>
+        </div>
+    );
 }

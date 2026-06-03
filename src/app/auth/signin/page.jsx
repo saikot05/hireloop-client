@@ -1,182 +1,135 @@
 "use client";
 
-import React, { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Input, Button, Card, Alert } from "@heroui/react"; 
-
-import { Eye, EyeSlash, Envelope, Lock } from "@gravity-ui/icons";
-import { signIn, signOut, useSession } from "@/lib/auth-client";
+import { useState } from "react";
+import { Card, Button, Link, TextField, Label, InputGroup, Input } from "@heroui/react";
+import { Eye, EyeSlash, At, ShieldKeyhole } from "@gravity-ui/icons";
+import { signIn } from "@/lib/auth-client";
 
 export default function SigninPage() {
-  const router = useRouter();
-  const { data: session, isPending: isSessionLoading } = useSession();
-  
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  
-  const [isVisible, setIsVisible] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+    // Form fields
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
 
-  const toggleVisibility = () => setIsVisible(!isVisible);
+    // UI States
+    const [isVisible, setIsVisible] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
 
-  const handleSignin = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setErrorMessage("");
-    setSuccessMessage("");
+    const toggleVisibility = () => setIsVisible(!isVisible);
 
-    try {
-      const { data, error } = await signIn.email({
-        email,
-        password,
-        callbackURL: "/"
-      });
+    const handleSignin = async (e) => {
+        e.preventDefault();
 
-      if (error) {
-        setErrorMessage(error.message || "Invalid email or password. Please try again.");
-      } else {
-        setSuccessMessage("Logged in successfully! Redirecting...");
-        setEmail("");
-        setPassword("");
-        
-        setTimeout(() => {
-          router.push("/");
-        }, 1500);
-      }
-    } catch (err) {
-      setErrorMessage("An unexpected error occurred.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        setError("");
+        setSuccess("");
+        setIsLoading(true);
 
-  const handleSignout = async () => {
-    setIsLoading(true);
-    try {
-      await signOut({
-        callbackURL: "/auth/signin"
-      });
-      setSuccessMessage("Signed out successfully!");
-    } catch (err) {
-      setErrorMessage("Failed to sign out.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        try {
+            const { data, error: authError } = await signIn.email({
+                email,
+                password,
+                callbackURL: "/" 
+            });
 
-  if (isSessionLoading) {
+            if (authError) {
+                setError(authError.message || "Invalid email or password.");
+            } else {
+                setSuccess("Signed in successfully! Redirecting...");
+                setEmail("");
+                setPassword("");
+            }
+        } catch (err) {
+            setError("An unexpected network error occurred.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background p-4">
-        <Button isLoading variant="light">Loading...</Button>
-      </div>
+        <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-950 px-4">
+            <Card className="w-full max-w-md p-6 shadow-sm border border-zinc-200 dark:border-zinc-800">
+
+                {/* Header Container */}
+                <div className="flex flex-col items-center justify-center gap-1 pb-6 border-b border-zinc-100 dark:border-zinc-800 mb-6 text-center">
+                    <h1 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">Welcome back</h1>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400">Enter your credentials to access your account</p>
+                </div>
+
+                {/* Form Body */}
+                <form onSubmit={handleSignin} className="flex flex-col gap-5">
+
+                    {/* Email Field */}
+                    <TextField isRequired name="email" type="email" className="flex flex-col gap-1.5">
+                        <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Email Address</Label>
+                        <InputGroup className="flex items-center gap-2 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 bg-zinc-50 dark:bg-zinc-900 focus-within:border-primary transition-colors">
+                            <At className="text-zinc-400 pointer-events-none" size={16} />
+                            <Input
+                                placeholder="you@example.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="w-full bg-transparent py-2 text-sm outline-none border-none text-zinc-900 dark:text-zinc-100"
+                            />
+                        </InputGroup>
+                    </TextField>
+
+                    {/* Password Field */}
+                    <TextField isRequired name="password" className="flex flex-col gap-1.5">
+                        <Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Password</Label>
+                        <InputGroup className="flex items-center gap-2 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 bg-zinc-50 dark:bg-zinc-900 focus-within:border-primary transition-colors">
+                            <ShieldKeyhole className="text-zinc-400 pointer-events-none" size={16} />
+                            <Input
+                                type={isVisible ? "text" : "password"}
+                                placeholder="Enter your password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="w-full bg-transparent py-2 text-sm outline-none border-none text-zinc-900 dark:text-zinc-100"
+                            />
+                            <button
+                                className="focus:outline-none text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition"
+                                type="button"
+                                onClick={toggleVisibility}
+                                aria-label="toggle password visibility"
+                            >
+                                {isVisible ? <EyeSlash size={18} /> : <Eye size={18} />}
+                            </button>
+                        </InputGroup>
+                    </TextField>
+
+                    {/* Dynamic Status Badges */}
+                    {error && (
+                        <div className="p-3.5 text-xs font-medium rounded-xl bg-red-100/60 dark:bg-red-950/50 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900">
+                            <span className="font-semibold">Error:</span> {error}
+                        </div>
+                    )}
+
+                    {success && (
+                        <div className="p-3.5 text-xs font-medium rounded-xl bg-emerald-100/60 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
+                            <span className="font-semibold">Success:</span> {success}
+                        </div>
+                    )}
+
+                    {/* Action Button */}
+                    <Button
+                        type="submit"
+                        color="primary"
+                        className="w-full font-semibold rounded-xl text-sm h-12"
+                        isLoading={isLoading}
+                        isDisabled={isLoading}
+                    >
+                        Sign In
+                    </Button>
+
+                    {/* Navigation Option */}
+                    <div className="text-center pt-4 border-t border-zinc-100 dark:border-zinc-800 mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+                        New to HireLoop?{" "}
+                        <Link href="/auth/signup" className="font-medium cursor-pointer text-sm text-blue-600 dark:text-blue-400">
+                            Create an account
+                        </Link>
+                    </div>
+
+                </form>
+            </Card>
+        </div>
     );
-  }
-
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md shadow-lg">
-        <Card.Content className="space-y-6 p-8">
-          
-          {session ? (
-            <div className="space-y-5 text-center">
-              <div className="flex flex-col space-y-2">
-                <h1 className="text-2xl font-bold tracking-tight">Already Signed In</h1>
-                <p className="text-small text-default-500">
-                  You are currently logged in as <span className="font-semibold text-default-700">{session.user?.email}</span>
-                </p>
-              </div>
-
-              {successMessage && (
-                <Alert color="success" title="Success" description={successMessage} />
-              )}
-
-              <div className="flex flex-col gap-3 pt-2">
-                <Button as={Link} href="/" color="primary" className="w-full font-medium">
-                  Go to Home
-                </Button>
-                <Button isLoading={isLoading} onClick={handleSignout} color="danger" variant="flat" className="w-full font-medium">
-                  Sign Out
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="flex flex-col space-y-2 text-center">
-                <h1 className="text-2xl font-bold tracking-tight">Welcome Back</h1>
-                <p className="text-small text-default-500">
-                  Enter your credentials to sign in to your account
-                </p>
-              </div>
-
-              {errorMessage && (
-                <Alert color="danger" title="Error" description={errorMessage} />
-              )}
-              {successMessage && (
-                <Alert color="success" title="Success" description={successMessage} />
-              )}
-
-              <form onSubmit={handleSignin} className="space-y-5">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-small font-medium text-default-700">Email Address</label>
-                  <Input
-                    isRequired
-                    type="email"
-                    placeholder="you@example.com"
-                    variant="bordered"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    startContent={<Envelope className="text-default-400 pointer-events-none text-xl" />}
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-small font-medium text-default-700">Password</label>
-                    <Link href="/auth/forgot-password" className="text-tiny text-primary hover:underline">
-                      Forgot password?
-                    </Link>
-                  </div>
-                  <Input
-                    isRequired
-                    placeholder="••••••••"
-                    variant="bordered"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    startContent={<Lock className="text-default-400 pointer-events-none text-xl" />}
-                    endContent={
-                      <button
-                        className="focus:outline-none flex items-center justify-center h-full"
-                        type="button"
-                        onClick={toggleVisibility}
-                      >
-                        {isVisible ? <EyeSlash className="text-default-400 text-xl" /> : <Eye className="text-default-400 text-xl" />}
-                      </button>
-                    }
-                    type={isVisible ? "text" : "password"}
-                  />
-                </div>
-
-                <Button isLoading={isLoading} type="submit" color="primary" className="w-full mt-2 font-medium">
-                  Sign In
-                </Button>
-              </form>
-
-              <div className="text-center text-small pt-2 border-t border-divider">
-                <p className="text-default-500">
-                  Don't have an account?{" "}
-                  <Link href="/auth/signup" className="text-primary hover:underline font-semibold transition-colors">
-                    Sign Up
-                  </Link>
-                </p>
-              </div>
-            </>
-          )}
-
-        </Card.Content>
-      </Card>
-    </div>
-  );
 }
