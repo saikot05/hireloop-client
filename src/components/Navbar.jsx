@@ -31,6 +31,21 @@ export default function Navbar() {
     },
   ];
 
+  const dashboardLinks = {
+    seeker: '/dashboard/seeker',
+    recruiter: '/dashboard/recruiter',
+    admin: '/dashboard/admin'
+  }
+
+  if (user?.email) {
+    navLinks.push(
+      {
+        label: 'Dashboard',
+        href: dashboardLinks[user?.role || 'seeker']
+      }
+    )
+  }
+
   return (
     <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#0B0B0F]/80 backdrop-blur-xl">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -87,7 +102,7 @@ export default function Navbar() {
 
               <Button
                 as={Link}
-                href="/register"
+                href="/auth/signup"
                 radius="lg"
                 className="h-11 bg-white px-6 text-sm font-semibold text-black hover:bg-gray-200"
               >
@@ -160,7 +175,7 @@ export default function Navbar() {
             <div className="border-t border-white/10 pt-4">
               <div className="flex flex-col gap-3">
                 <Link
-                  href="/login"
+                  href="/auth/signin"
                   className="rounded-xl px-4 py-3 text-base font-medium text-violet-400 transition hover:bg-white/5"
                   onClick={() => setIsMenuOpen(false)}
                 >
@@ -169,7 +184,7 @@ export default function Navbar() {
 
                 <Button
                   as={Link}
-                  href="/register"
+                  href="/auth/signup"
                   className="bg-white font-semibold text-black"
                   radius="lg"
                 >

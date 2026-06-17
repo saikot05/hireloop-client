@@ -10,12 +10,10 @@ export default function SigninPage() {
     // Form fields
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-
-    const router = useRouter();
-
+    const router = useRouter()
     const searchParams = useSearchParams();
     const redirectTo = searchParams.get("redirect") || "/";
-
+    // console.log("Redirecting to:", redirectTo);
     // UI States
     const [isVisible, setIsVisible] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -35,7 +33,6 @@ export default function SigninPage() {
             const { data, error: authError } = await signIn.email({
                 email,
                 password,
-                
             });
 
             if (authError) {
